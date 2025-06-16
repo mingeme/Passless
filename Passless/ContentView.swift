@@ -7,6 +7,9 @@ struct ContentView: View {
     // 用于自动填充的延迟时间（秒）
     private let autofillDelay: TimeInterval = 0.5
     
+    // 搜索框的焦点状态
+    @FocusState private var searchFieldFocused: Bool
+    
     // 记录上一个活动窗口
     @State private var previousActiveApp: NSRunningApplication? = nil
     @Environment(\.modelContext) private var modelContext
@@ -31,7 +34,49 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             VStack {
-                SearchBar(text: $searchText)
+                // 搜索框
+                HStack(spacing: 6) {
+                    // 左侧搜索图标
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                        .frame(width: 16, height: 16)
+                    
+                    // 输入框
+                    TextField("搜索", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .focused($searchFieldFocused)
+                        .onSubmit {
+                            // 当按下回车键时的操作（可选）
+                        }
+                        .onExitCommand {
+                            // 当按下 Esc 键时清空搜索框
+                            if !searchText.isEmpty {
+                                searchText = ""
+                            } else {
+                                // 如果搜索框已经为空，则取消聚焦
+                                searchFieldFocused = false
+                            }
+                        }
+                    
+                    // 右侧清除按钮
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .frame(width: 16, height: 16)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 6)
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(searchFieldFocused ? Color.blue : Color(NSColor.separatorColor), lineWidth: searchFieldFocused ? 2 : 0.5)
+                )
+                .animation(.easeInOut(duration: 0.2), value: searchFieldFocused)
+                .padding(.horizontal, 6)
                 
                 ScrollViewReader { proxy in
                     List(selection: $selectedEntries) {
@@ -55,6 +100,7 @@ struct ContentView: View {
                                 }) {
                                     Label("填充", systemImage: "keyboard")
                                 }
+                                
                             }
                         }
                         .onDelete(perform: deleteEntries)
@@ -89,7 +135,15 @@ struct ContentView: View {
             .navigationTitle("密码管理")
             .frame(minWidth: 300)
             .toolbar {
-                ToolbarItem {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button(action: {
+                        searchFieldFocused = true
+                    }) {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .keyboardShortcut("f", modifiers: .command)
+                    .help("Command+F 搜索")
+                    
                     Button(action: { showingAddEntrySheet = true }) {
                         Label("添加", systemImage: "plus")
                     }
@@ -234,30 +288,9 @@ struct ContentView: View {
             }
         }
     }
-
-}
-
-struct SearchBar: View {
-    @Binding var text: String
     
-    var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-            
-            TextField("搜索", text: $text)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            if !text.isEmpty {
-                Button(action: { text = "" }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .padding(.horizontal)
-    }
 }
+
 
 #Preview {
     ContentView()

@@ -3,10 +3,13 @@ import SwiftData
 
 struct EntryDetailView: View {
     var entry: PasswordEntry
+    @State private var currentEntryId: PersistentIdentifier?
     @Environment(\.modelContext) private var modelContext
     @State private var isPasswordVisible = false
     @State private var isEditing = false
-    @State private var editedEntry: PasswordEntry? = nil
+    @State private var editedName: String = ""
+    @State private var editedUsername: String = ""
+    @State private var editedPassword: String = ""
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
@@ -49,8 +52,8 @@ struct EntryDetailView: View {
                         .shadow(radius: 2)
                     
                     // 网站/应用名称
-                    if isEditing, let editedEntry = editedEntry {
-                        TextField("名称", text: Binding(get: { editedEntry.name }, set: { self.editedEntry?.name = $0 }))
+                    if isEditing {
+                        TextField("名称", text: $editedName)
                             .font(.title)
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
@@ -78,8 +81,8 @@ struct EntryDetailView: View {
                         Text("用户名")
                             .foregroundColor(.secondary)
                         Spacer()
-                        if isEditing, let editedEntry = editedEntry {
-                            TextField("用户名", text: Binding(get: { editedEntry.username }, set: { self.editedEntry?.username = $0 }))
+                        if isEditing {
+                            TextField("用户名", text: $editedUsername)
                                 .multilineTextAlignment(.trailing)
                                 .fontWeight(.medium)
                                 .textFieldStyle(.plain)
@@ -98,8 +101,8 @@ struct EntryDetailView: View {
                         Text("密码")
                             .foregroundColor(.secondary)
                         Spacer()
-                        if isEditing, let editedEntry = editedEntry {
-                            TextField("密码", text: Binding(get: { editedEntry.password }, set: { self.editedEntry?.password = $0 }))
+                        if isEditing {
+                            TextField("密码", text: $editedPassword)
                                 .multilineTextAlignment(.trailing)
                                 .fontWeight(.medium)
                                 .textFieldStyle(.plain)
@@ -135,29 +138,44 @@ struct EntryDetailView: View {
                 Spacer()
             }
         }
+        .onAppear {
+            // 初始化当前项目 ID
+            currentEntryId = entry.id
+        }
+        .onChange(of: entry.id) { oldId, newId in
+            // 如果项目变化且处于编辑模式，退出编辑模式
+            if isEditing {
+                isEditing = false
+                // 重置编辑字段
+                editedName = entry.name
+                editedUsername = entry.username
+                editedPassword = entry.password
+            }
+            // 更新当前项目 ID
+            currentEntryId = newId
+        }
     }
     
     // 开始编辑
     private func startEditing() {
-        // 创建一个副本用于编辑
-        editedEntry = PasswordEntry(name: entry.name, username: entry.username, password: entry.password)
+        // 使用字符串变量而不是创建新实体
+        editedName = entry.name
+        editedUsername = entry.username
+        editedPassword = entry.password
         isEditing = true
     }
     
     // 保存更改
     private func saveChanges() {
         // 将编辑的数据应用到原始实体
-        if let editedEntry = editedEntry {
-            entry.name = editedEntry.name
-            entry.username = editedEntry.username
-            entry.password = editedEntry.password
-            
-            // 通知 SwiftData 数据已更改
-            try? modelContext.save()
-        }
+        entry.name = editedName
+        entry.username = editedUsername
+        entry.password = editedPassword
+        
+        // 通知 SwiftData 数据已更改
+        try? modelContext.save()
         
         // 退出编辑模式
-        editedEntry = nil
         isEditing = false
     }
 }

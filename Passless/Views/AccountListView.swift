@@ -7,14 +7,16 @@ struct AccountListView: View {
     @ObservedObject private var appState = AppState.shared
     
     private var filteredEntries: [PasswordEntry] {
+        let filtered: [PasswordEntry]
         if appState.searchText.isEmpty {
-            return allEntries.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            filtered = allEntries
         } else {
-            return allEntries.filter { entry in
-                entry.name.localizedCaseInsensitiveContains(appState.searchText) ||
-                entry.username.localizedCaseInsensitiveContains(appState.searchText)
-            }.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            filtered = allEntries.filter { entry in
+                entry.name.fuzzyMatch(appState.searchText) ||
+                entry.username.fuzzyMatch(appState.searchText)
+            }
         }
+        return filtered.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
     
     var body: some View {

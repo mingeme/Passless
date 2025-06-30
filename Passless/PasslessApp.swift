@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AppKit
+import KeyboardShortcuts
 
 @main
 struct PasslessApp: App {

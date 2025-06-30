@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AppKit
+import KeyboardShortcuts
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusBarController: StatusBarController?
@@ -40,13 +41,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(forName: .closeStatusMenu, object: nil, queue: nil) { _ in
             self.statusBarController?.closePanel()
         }
+
+        // 设置全局快捷键
+        setupGlobalShortcuts()
+    }
+
+    private func setupGlobalShortcuts() {
+        KeyboardShortcuts.onKeyUp(for: .openPassless) { [weak self] in
+            self?.handleGlobalShortcut()
+        }
+    }
+
+    private func handleGlobalShortcut() {
+        // 获取鼠标位置
+        let mouseLocation = NSEvent.mouseLocation
+
+        // 在鼠标位置显示面板
+        DispatchQueue.main.async {
+            self.statusBarController?.showPanelAtLocation(mouseLocation)
+        }
     }
 
 
-    
     // 当所有窗口都关闭时，防止应用退出
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false
     }
-    
+
 }

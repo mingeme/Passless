@@ -44,4 +44,8 @@ class StatusBarController: NSObject {
     @objc func closePanel() {
         floatingPanel?.close()
     }
+
+    func showPanelAtLocation(_ location: NSPoint) {
+        floatingPanel?.showAtLocation(location)
+    }
 }

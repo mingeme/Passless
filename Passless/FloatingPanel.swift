@@ -93,6 +93,40 @@ class FloatingPanel<Content: View>: NSPanel, NSWindowDelegate {
         }
     }
 
+    func showAtLocation(_ location: NSPoint, height: CGFloat = 400) {
+        // 设置面板大小
+        setContentSize(NSSize(width: 280, height: height))
+
+        // 计算位置 - 在鼠标位置附近，但确保不超出屏幕边界
+        let screenFrame = NSScreen.main?.visibleFrame ?? NSRect.zero
+
+        var panelX = location.x - frame.width / 2
+        var panelY = location.y - frame.height - 10
+
+        // 确保面板不超出屏幕左右边界
+        if panelX < screenFrame.minX {
+            panelX = screenFrame.minX + 10
+        } else if panelX + frame.width > screenFrame.maxX {
+            panelX = screenFrame.maxX - frame.width - 10
+        }
+
+        // 确保面板不超出屏幕上下边界
+        if panelY < screenFrame.minY {
+            panelY = location.y + 10 // 如果下方空间不够，显示在鼠标上方
+        } else if panelY + frame.height > screenFrame.maxY {
+            panelY = screenFrame.maxY - frame.height - 10
+        }
+
+        setFrameOrigin(NSPoint(x: panelX, y: panelY))
+
+        // 显示面板
+        orderFrontRegardless()
+        makeKey()
+        isPresented = true
+
+        // 不高亮状态栏按钮（因为这是通过快捷键触发的）
+    }
+
     // 当失去焦点时自动关闭，例如点击外部区域
     override func resignKey() {
         super.resignKey()
